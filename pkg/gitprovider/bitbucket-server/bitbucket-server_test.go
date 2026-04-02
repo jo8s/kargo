@@ -81,7 +81,7 @@ func TestCreatePullRequest(t *testing.T) {
 		now := time.Now().Truncate(time.Second).UTC()
 		millis := now.UnixNano() / int64(time.Millisecond)
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// 1. Validate the Request
 			assert.Equal(t, http.MethodPost, r.Method)
 
@@ -139,7 +139,7 @@ func TestGetPullRequest(t *testing.T) {
 		now := time.Now().Truncate(time.Second)
 		millis := now.UnixNano() / int64(time.Millisecond)
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			resp := map[string]any{
 				"id":          int64(1),
 				"version":     1,
@@ -303,7 +303,7 @@ func TestMergePullRequest(t *testing.T) {
 		})
 
 		// 2. Mock POST merge call
-		mux.HandleFunc("/rest/api/1.0/projects/proj/repos/repo/pull-requests/1/merge", func(w http.ResponseWriter, _ *http.Request) {
+		mux.HandleFunc("/rest/api/1.0/projects/proj/repos/repo/pull-requests/1/merge", func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "99", r.URL.Query().Get("version"))
 			resp := map[string]any{
 				"id":    int64(1),
@@ -360,7 +360,7 @@ func TestGetCommitURL(t *testing.T) {
 }
 
 func TestDoRequest(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check headers
 		assert.Equal(t, "Bearer secret-token", r.Header.Get("Authorization"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
