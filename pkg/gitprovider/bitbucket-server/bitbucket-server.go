@@ -106,7 +106,10 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	}, nil
 }
 
-func (p *provider) CreatePullRequest(ctx context.Context, opts *gitprovider.CreatePullRequestOpts,) (*gitprovider.PullRequest, error) {
+func (p *provider) CreatePullRequest(
+	ctx context.Context,
+	opts *gitprovider.CreatePullRequestOpts,
+) (*gitprovider.PullRequest, error) {
 	apiURL := fmt.Sprintf("%s/pull-requests", p.apiBaseURL)
 
 	payload := map[string]any{
