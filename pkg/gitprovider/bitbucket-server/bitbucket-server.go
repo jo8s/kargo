@@ -59,9 +59,9 @@ type bitbucketPR struct {
 		ID           string `json:"id"`
 		LatestCommit string `json:"latestCommit"`
 	} `json:"fromRef"`
-  ToRef struct {
-		ID string `json:"id"`
-		LatestCommit string `json:"latestCommit"`
+  ToRef 			struct {
+		ID 						string `json:"id"`
+		LatestCommit 	string `json:"latestCommit"`
 	} `json:"toRef"`
 	Links struct {
 		Self []struct {
@@ -72,8 +72,6 @@ type bitbucketPR struct {
 
 type provider struct {
 	apiBaseURL string
-	project    string
-	repo       string
 	token      string
 	httpClient *http.Client
 }
@@ -108,10 +106,10 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	}, nil
 }
 
-func (p *provider) CreatePullRequest(ctx context.Context, opts *gitprovider.CreatePullRequestOpts) (*gitprovider.PullRequest, error) {
+func (p *provider) CreatePullRequest(ctx context.Context, opts *gitprovider.CreatePullRequestOpts,) (*gitprovider.PullRequest, error) {
 	apiURL := fmt.Sprintf("%s/pull-requests", p.apiBaseURL)
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"title":       opts.Title,
 		"description": opts.Description,
 		"fromRef":     map[string]string{"id": "refs/heads/" + opts.Head},
@@ -196,7 +194,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	return prs, nil
 }
 
-func (p *provider) MergePullRequest(ctx context.Context, id int64, opts *gitprovider.MergePullRequestOpts) (*gitprovider.PullRequest, bool, error) {
+func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts) (*gitprovider.PullRequest, bool, error) {
 	// 1. Get current PR state to retrieve the 'version' field (required by Bitbucket Server)
 	pr, err := p.GetPullRequest(ctx, id)
 	if err != nil {
@@ -206,7 +204,10 @@ func (p *provider) MergePullRequest(ctx context.Context, id int64, opts *gitprov
 		return pr, true, nil
 	}
 
-	raw := pr.Object.(*bitbucketPR)
+	raw, ok := pr.Object.(*bitbucketPR)
+	if !ok {
+    return nil, false, fmt.Errorf("unexpected object type: %T", pr.Object)
+  }
 
 	// 2. Perform merge using version query parameter
 	apiURL := fmt.Sprintf("%s/pull-requests/%d/merge?version=%d", p.apiBaseURL, id, raw.Version)
@@ -231,7 +232,7 @@ func (p *provider) GetCommitURL(repoURL string, sha string) (string, error) {
 }
 
 // doRequest is a helper to handle HTTP headers and Bearer Token auth
-func (p *provider) doRequest(ctx context.Context, method, url string, body interface{}) (*http.Response, error) {
+func (p *provider) doRequest(ctx context.Context, method, apiURL string, body interface{}) (*http.Response, error) {
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
@@ -240,7 +241,7 @@ func (p *provider) doRequest(ctx context.Context, method, url string, body inter
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, url, buf)
+	req, err := http.NewRequestWithContext(ctx, method, apiURL, buf)
 	if err != nil {
 		return nil, err
 	}
@@ -250,6 +251,7 @@ func (p *provider) doRequest(ctx context.Context, method, url string, body inter
 		req.Header.Set("Authorization", "Bearer "+p.token)
 	}
 
+  // nolint: gosec
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
 		return nil, err
