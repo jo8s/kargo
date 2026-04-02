@@ -298,27 +298,29 @@ func TestMergePullRequest(t *testing.T) {
 		mux.HandleFunc(
 			"/rest/api/1.0/projects/proj/repos/repo/pull-requests/1",
 			func(w http.ResponseWriter, _ *http.Request) {
-			resp := map[string]any{
-				"id":      int64(1),
-				"version": 99, // Current version
-				"state":   "OPEN",
-				"fromRef": map[string]any{"latestCommit": "sha-merged"},
-			}
-			_ = json.NewEncoder(w).Encode(resp)
-		})
+				resp := map[string]any{
+					"id":      int64(1),
+					"version": 99, // Current version
+					"state":   "OPEN",
+					"fromRef": map[string]any{"latestCommit": "sha-merged"},
+				}
+				_ = json.NewEncoder(w).Encode(resp)
+			},
+		)
 
 		// 2. Mock POST merge call
 		mux.HandleFunc(
 			"/rest/api/1.0/projects/proj/repos/repo/pull-requests/1/merge",
 			func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, "99", r.URL.Query().Get("version"))
-			resp := map[string]any{
-				"id":    int64(1),
-				"state": "MERGED",
-				"fromRef": map[string]any{"latestCommit": "sha-merged"},
-			}
-			_ = json.NewEncoder(w).Encode(resp)
-		})
+				assert.Equal(t, "99", r.URL.Query().Get("version"))
+				resp := map[string]any{
+					"id":    int64(1),
+					"state": "MERGED",
+					"fromRef": map[string]any{"latestCommit": "sha-merged"},
+				}
+				_ = json.NewEncoder(w).Encode(resp)
+			},
+		)
 
 		server := httptest.NewServer(mux)
 		defer server.Close()
