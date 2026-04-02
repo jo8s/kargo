@@ -314,8 +314,8 @@ func TestMergePullRequest(t *testing.T) {
 			func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "99", r.URL.Query().Get("version"))
 				resp := map[string]any{
-					"id":    int64(1),
-					"state": "MERGED",
+					"id":      int64(1),
+					"state":   "MERGED",
 					"fromRef": map[string]any{"latestCommit": "sha-merged"},
 				}
 				_ = json.NewEncoder(w).Encode(resp)

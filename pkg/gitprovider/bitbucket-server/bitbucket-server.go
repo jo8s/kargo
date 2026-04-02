@@ -55,11 +55,11 @@ type bitbucketPR struct {
 	Description string `json:"description"`
 	State       string `json:"state"`
 	CreatedDate int64  `json:"createdDate"`
-	FromRef     struct {
-		ID           string `json:"id"`
-		LatestCommit string `json:"latestCommit"`
-	} `json:"fromRef"`
-	ToRef       struct {
+	FromRef struct {
+			ID           string `json:"id"`
+			LatestCommit string `json:"latestCommit"`
+		} `json:"fromRef"`
+	ToRef struct {
 		ID           string `json:"id"`
 		LatestCommit string `json:"latestCommit"`
 	} `json:"toRef"`
