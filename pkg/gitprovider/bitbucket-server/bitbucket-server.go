@@ -55,10 +55,10 @@ type bitbucketPR struct {
 	Description string `json:"description"`
 	State       string `json:"state"`
 	CreatedDate int64  `json:"createdDate"`
-	FromRef struct {
-			ID           string `json:"id"`
-			LatestCommit string `json:"latestCommit"`
-		} `json:"fromRef"`
+	FromRef     struct {
+		ID           string `json:"id"`
+		LatestCommit string `json:"latestCommit"`
+	} `json:"fromRef"`
 	ToRef struct {
 		ID           string `json:"id"`
 		LatestCommit string `json:"latestCommit"`
@@ -94,11 +94,11 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 		return nil, fmt.Errorf("invalid Bitbucket Server URL format: %s", u.Path)
 	}
 
-  projectType := parts[0] // "projects" or "users"
-	project     := parts[1]
-	repoSlug    := parts[3]
+	projectType := parts[0] // "projects" or "users"
+	project := parts[1]
+	repoSlug := parts[3]
 
-  return &provider{
+	return &provider{
 		apiBaseURL: fmt.Sprintf("%s://%s/rest/api/1.0/%s/%s/repos/%s",
 			u.Scheme, u.Host, projectType, project, repoSlug),
 		token:      opts.Token,
@@ -106,7 +106,7 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	}, nil
 }
 
-func (p *provider) CreatePullRequest(ctx context.Context, opts *gitprovider.CreatePullRequestOpts,) (*gitprovider.PullRequest, error) {
+func (p *provider) CreatePullRequest(ctx context.Context, opts *gitprovider.CreatePullRequestOpts) (*gitprovider.PullRequest, error) {
 	apiURL := fmt.Sprintf("%s/pull-requests", p.apiBaseURL)
 
 	payload := map[string]any{
@@ -144,7 +144,7 @@ func (p *provider) GetPullRequest(ctx context.Context, id int64) (*gitprovider.P
 	return p.toProviderPR(&res), nil
 }
 
-func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListPullRequestOptions,) ([]gitprovider.PullRequest, error) {
+func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListPullRequestOptions) ([]gitprovider.PullRequest, error) {
 	state := "OPEN"
 	if opts != nil && opts.State == gitprovider.PullRequestStateClosed {
 		state = "MERGED"
@@ -164,7 +164,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 		return nil, err
 	}
 
-  prs := make([]gitprovider.PullRequest, 0, len(result.Values))
+	prs := make([]gitprovider.PullRequest, 0, len(result.Values))
 	for _, v := range result.Values {
 		// 1. Filter by Head Branch
 		if opts != nil && opts.HeadBranch != "" {
@@ -194,7 +194,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	return prs, nil
 }
 
-func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts,) (*gitprovider.PullRequest, bool, error) {
+func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts) (*gitprovider.PullRequest, bool, error) {
 	// 1. Get current PR state to retrieve the 'version' field (required by Bitbucket Server)
 	pr, err := p.GetPullRequest(ctx, id)
 	if err != nil {
@@ -206,8 +206,8 @@ func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovide
 
 	raw, ok := pr.Object.(*bitbucketPR)
 	if !ok {
-    return nil, false, fmt.Errorf("unexpected object type: %T", pr.Object)
-  }
+		return nil, false, fmt.Errorf("unexpected object type: %T", pr.Object)
+	}
 
 	// 2. Perform merge using version query parameter
 	apiURL := fmt.Sprintf("%s/pull-requests/%d/merge?version=%d", p.apiBaseURL, id, raw.Version)
@@ -251,7 +251,7 @@ func (p *provider) doRequest(ctx context.Context, method, apiURL string, body an
 		req.Header.Set("Authorization", "Bearer "+p.token)
 	}
 
-  // #nosec G704
+	// #nosec G704
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -272,12 +272,12 @@ func (p *provider) toProviderPR(bb *bitbucketPR) *gitprovider.PullRequest {
 	createdAt := time.Unix(0, bb.CreatedDate*int64(time.Millisecond))
 
 	return &gitprovider.PullRequest{
-		Number:  		bb.ID,
-		URL:     		link,
-		Open:    		bb.State == prStateOpen,
-		Merged:  		bb.State == prStateMerged,
-		HeadSHA: 		bb.FromRef.LatestCommit,
-		CreatedAt: 	&createdAt,
-		Object:  		bb, // Pass the raw struct for stateful merge operations
+		Number:    bb.ID,
+		URL:       link,
+		Open:      bb.State == prStateOpen,
+		Merged:    bb.State == prStateMerged,
+		HeadSHA:   bb.FromRef.LatestCommit,
+		CreatedAt: &createdAt,
+		Object:    bb, // Pass the raw struct for stateful merge operations
 	}
 }
