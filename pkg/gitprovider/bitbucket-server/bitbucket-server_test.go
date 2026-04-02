@@ -68,7 +68,8 @@ func TestNewProvider(t *testing.T) {
 			pInterface, err := NewProvider(tc.repoURL, &gitprovider.Options{Token: "secret"})
 			require.NoError(t, err)
 
-			p := pInterface.(*provider)
+			p, ok := pInterface.(*provider)
+			require.True(t, ok)
 			assert.Equal(t, tc.expectedBaseURL, p.apiBaseURL)
 			assert.Equal(t, "secret", p.token)
 		})
@@ -139,7 +140,7 @@ func TestGetPullRequest(t *testing.T) {
 		now := time.Now().Truncate(time.Second)
 		millis := now.UnixNano() / int64(time.Millisecond)
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			resp := map[string]any{
 				"id":          int64(1),
 				"version":     1,
@@ -163,7 +164,8 @@ func TestGetPullRequest(t *testing.T) {
 
 		repoURL := fmt.Sprintf("%s/projects/proj/repos/repo", server.URL)
 		pInterface, _ := NewProvider(repoURL, &gitprovider.Options{})
-		p := pInterface.(*provider)
+		p, ok := pInterface.(*provider)
+		require.True(t, ok)
 
 		pr, err := p.GetPullRequest(context.Background(), 1)
 
@@ -197,7 +199,7 @@ func TestGetPullRequest_Errors(t *testing.T) {
 	t.Run("handle malformed json", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{ "id": "not-an-int" }`)) // Type mismatch
+			_, _ = w.Write([]byte(`{ "id": "not-an-int" }`)) // Type mismatch
 		}))
 		defer server.Close()
 
@@ -267,7 +269,8 @@ func TestListPullRequests_Filtering(t *testing.T) {
 
 	repoURL := fmt.Sprintf("%s/projects/proj/repos/repo", server.URL)
 	pInterface, _ := NewProvider(repoURL, nil)
-	p := pInterface.(*provider)
+	p, ok := pInterface.(*provider)
+	require.True(t, ok)
 
 	t.Run("filter by head branch", func(t *testing.T) {
 		prs, err := p.ListPullRequests(context.Background(), &gitprovider.ListPullRequestOptions{
@@ -292,18 +295,22 @@ func TestMergePullRequest(t *testing.T) {
 		mux := http.NewServeMux()
 
 		// 1. Mock GET for version check
-		mux.HandleFunc("/rest/api/1.0/projects/proj/repos/repo/pull-requests/1", func(w http.ResponseWriter, _ *http.Request) {
+		mux.HandleFunc(
+			"/rest/api/1.0/projects/proj/repos/repo/pull-requests/1",
+			func(w http.ResponseWriter, _ *http.Request) {
 			resp := map[string]any{
 				"id":      int64(1),
 				"version": 99, // Current version
 				"state":   "OPEN",
 				"fromRef": map[string]any{"latestCommit": "sha-merged"},
 			}
-			_ =json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		})
 
 		// 2. Mock POST merge call
-		mux.HandleFunc("/rest/api/1.0/projects/proj/repos/repo/pull-requests/1/merge", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc(
+			"/rest/api/1.0/projects/proj/repos/repo/pull-requests/1/merge",
+			func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "99", r.URL.Query().Get("version"))
 			resp := map[string]any{
 				"id":    int64(1),
@@ -367,7 +374,7 @@ func TestDoRequest(t *testing.T) {
 
 		// Check body was sent correctly
 		var body map[string]string
-		json.NewDecoder(r.Body).Decode(&body)
+		_ = json.NewDecoder(r.Body).Decode(&body)
 		assert.Equal(t, "bar", body["foo"])
 
 		w.WriteHeader(http.StatusOK)

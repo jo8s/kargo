@@ -59,9 +59,9 @@ type bitbucketPR struct {
 		ID           string `json:"id"`
 		LatestCommit string `json:"latestCommit"`
 	} `json:"fromRef"`
-  ToRef 			struct {
-		ID 						string `json:"id"`
-		LatestCommit 	string `json:"latestCommit"`
+  ToRef       struct {
+		ID           string `json:"id"`
+		LatestCommit string `json:"latestCommit"`
 	} `json:"toRef"`
 	Links struct {
 		Self []struct {
@@ -144,7 +144,7 @@ func (p *provider) GetPullRequest(ctx context.Context, id int64) (*gitprovider.P
 	return p.toProviderPR(&res), nil
 }
 
-func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListPullRequestOptions) ([]gitprovider.PullRequest, error) {
+func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListPullRequestOptions,) ([]gitprovider.PullRequest, error) {
 	state := "OPEN"
 	if opts != nil && opts.State == gitprovider.PullRequestStateClosed {
 		state = "MERGED"
@@ -194,7 +194,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	return prs, nil
 }
 
-func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts) (*gitprovider.PullRequest, bool, error) {
+func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts,) (*gitprovider.PullRequest, bool, error) {
 	// 1. Get current PR state to retrieve the 'version' field (required by Bitbucket Server)
 	pr, err := p.GetPullRequest(ctx, id)
 	if err != nil {
@@ -232,7 +232,7 @@ func (p *provider) GetCommitURL(repoURL string, sha string) (string, error) {
 }
 
 // doRequest is a helper to handle HTTP headers and Bearer Token auth
-func (p *provider) doRequest(ctx context.Context, method, apiURL string, body interface{}) (*http.Response, error) {
+func (p *provider) doRequest(ctx context.Context, method, apiURL string, body any) (*http.Response, error) {
 	var buf io.ReadWriter
 	if body != nil {
 		buf = new(bytes.Buffer)
@@ -251,7 +251,7 @@ func (p *provider) doRequest(ctx context.Context, method, apiURL string, body in
 		req.Header.Set("Authorization", "Bearer "+p.token)
 	}
 
-  // nolint: gosec
+  // #nosec G704
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
 		return nil, err
