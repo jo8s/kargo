@@ -147,7 +147,10 @@ func (p *provider) GetPullRequest(ctx context.Context, id int64) (*gitprovider.P
 	return p.toProviderPR(&res), nil
 }
 
-func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListPullRequestOptions,) ([]gitprovider.PullRequest, error) {
+func (p *provider) ListPullRequests(
+	ctx context.Context,
+	opts *gitprovider.ListPullRequestOptions,
+) ([]gitprovider.PullRequest, error) {
 	state := "OPEN"
 	if opts != nil && opts.State == gitprovider.PullRequestStateClosed {
 		state = "MERGED"
@@ -158,6 +161,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G307
 	defer resp.Body.Close()
 
 	var result struct {
@@ -197,7 +201,11 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	return prs, nil
 }
 
-func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovider.MergePullRequestOpts,) (*gitprovider.PullRequest, bool, error) {
+func (p *provider) MergePullRequest(
+	ctx context.Context,
+	id int64,
+	_ *gitprovider.MergePullRequestOpts,
+) (*gitprovider.PullRequest, bool, error) {
 	// 1. Get current PR state to retrieve the 'version' field (required by Bitbucket Server)
 	pr, err := p.GetPullRequest(ctx, id)
 	if err != nil {
@@ -219,6 +227,7 @@ func (p *provider) MergePullRequest(ctx context.Context, id int64, _ *gitprovide
 	if err != nil {
 		return nil, false, err
 	}
+	// #nosec G307
 	defer resp.Body.Close()
 
 	var merged bitbucketPR
