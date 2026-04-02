@@ -196,7 +196,7 @@ func (p *provider) ListPullRequests(ctx context.Context, opts *gitprovider.ListP
 	return prs, nil
 }
 
-func (p *provider) MergePullRequest(ctx context.Context, id int64) (*gitprovider.PullRequest, bool, error) {
+func (p *provider) MergePullRequest(ctx context.Context, id int64, opts *gitprovider.MergePullRequestOpts) (*gitprovider.PullRequest, bool, error) {
 	// 1. Get current PR state to retrieve the 'version' field (required by Bitbucket Server)
 	pr, err := p.GetPullRequest(ctx, id)
 	if err != nil {

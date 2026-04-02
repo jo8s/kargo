@@ -319,7 +319,7 @@ func TestMergePullRequest(t *testing.T) {
 		repoURL := fmt.Sprintf("%s/projects/proj/repos/repo", server.URL)
 		p, _ := NewProvider(repoURL, &gitprovider.Options{})
 
-		pr, merged, err := p.MergePullRequest(context.Background(), 1)
+		pr, merged, err := p.MergePullRequest(context.Background(), 1, nil)
 		require.NoError(t, err)
 		assert.True(t, merged)
 		assert.True(t, pr.Merged)
