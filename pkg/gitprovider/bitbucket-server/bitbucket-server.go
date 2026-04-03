@@ -91,8 +91,7 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	path = strings.TrimSuffix(path, ".git")
 	parts := strings.Split(path, "/")
 
-
-  var projectType, project, repoSlug string
+	var projectType, project, repoSlug string
 
 	// 1. Check for the 'scm' prefix used by many Bitbucket Server installs
 	if parts[0] == "scm" && len(parts) >= 3 {
