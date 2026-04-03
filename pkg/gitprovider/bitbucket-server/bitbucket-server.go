@@ -90,19 +90,42 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	path := strings.Trim(u.Path, "/")
 	path = strings.TrimSuffix(path, ".git")
 	parts := strings.Split(path, "/")
-	if len(parts) < 4 {
-		return nil, fmt.Errorf("invalid Bitbucket Server URL format: %s", u.Path)
+
+
+  var projectType, project, repoSlug string
+
+	// 1. Check for the 'scm' prefix used by many Bitbucket Server installs
+	if parts[0] == "scm" && len(parts) >= 3 {
+			project = parts[1]
+			repoSlug = parts[2]
+	} else if parts[0] == "projects" && len(parts) >= 4 {
+			// 2. Handle the standard /projects/PROJ/repos/REPO format
+			project = parts[1]
+			repoSlug = parts[3]
+	} else if len(parts) >= 2 {
+			// 3. Fallback for direct /PROJ/REPO or /~USER/REPO
+			project = parts[0]
+			repoSlug = parts[1]
+	} else {
+			return nil, fmt.Errorf("could not determine project and repo from path: %s", u.Path)
 	}
 
-	projectType := parts[0] // "projects" or "users"
-	project := parts[1]
-	repoSlug := parts[3]
+	// 4. Determine if this is a User space or a Project space
+	projectType = "projects"
+	if strings.HasPrefix(project, "~") {
+			projectType = "users"
+	}
+
+  // 5. Build the API Base URL correctly
+	// Bitbucket Server API: /rest/api/1.0/projects/PROJ/repos/REPO
+	// OR /rest/api/1.0/users/~USER/repos/REPO
+	apiBaseURL := fmt.Sprintf("%s://%s/rest/api/1.0/%s/%s/repos/%s",
+			u.Scheme, u.Host, projectType, project, repoSlug)
 
 	return &provider{
-		apiBaseURL: fmt.Sprintf("%s://%s/rest/api/1.0/%s/%s/repos/%s",
-			u.Scheme, u.Host, projectType, project, repoSlug),
-		token:      opts.Token,
-		httpClient: cleanhttp.DefaultClient(),
+			apiBaseURL: apiBaseURL,
+			token:      opts.Token,
+			httpClient: cleanhttp.DefaultClient(),
 	}, nil
 }
 

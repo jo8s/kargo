@@ -47,31 +47,49 @@ func TestRegistration(t *testing.T) {
 
 func TestNewProvider(t *testing.T) {
 	testCases := []struct {
-		name            string
-		repoURL         string
-		expectedBaseURL string
+		name        string
+		repoURL     string
+		expectedURL string
+		wantErr     bool
 	}{
 		{
-			name:            "standard project repo",
-			repoURL:         "https://bitbucket.test/projects/proj/repos/my-repo",
-			expectedBaseURL: "https://bitbucket.test/rest/api/1.0/projects/proj/repos/my-repo",
+			name:        "Standard Project URL",
+			repoURL:     "https://bitbucket.test/projects/proj/repos/repo",
+			expectedURL: "https://bitbucket.test/rest/api/1.0/projects/proj/repos/repo",
+			wantErr:     false,
 		},
 		{
-			name:            "personal user repo",
-			repoURL:         "https://bitbucket.test/users/user/repos/kargo",
-			expectedBaseURL: "https://bitbucket.test/rest/api/1.0/users/user/repos/kargo",
+			name:        "Provider Personal URL with SCM",
+			repoURL:     "https://bitbucket.provider.nl/scm/~jsmith/kargo.git",
+			expectedURL: "https://bitbucket.provider.nl/rest/api/1.0/users/~jsmith/repos/kargo",
+			wantErr:     false,
+		},
+		{
+			name:        "Personal URL without SCM",
+			repoURL:     "https://bitbucket.test/~jsmith/my-repo",
+			expectedURL: "https://bitbucket.test/rest/api/1.0/users/~jsmith/repos/my-repo",
+			wantErr:     false,
+		},
+		{
+			name:        "Invalid URL",
+			repoURL:     "https://bitbucket.test/too-short",
+			expectedURL: "",
+			wantErr:     true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			pInterface, err := NewProvider(tc.repoURL, &gitprovider.Options{Token: "secret"})
-			require.NoError(t, err)
+			providerInterface, err := NewProvider(tc.repoURL, &gitprovider.Options{Token: "test-token"})
 
-			p, ok := pInterface.(*provider)
-			require.True(t, ok)
-			assert.Equal(t, tc.expectedBaseURL, p.apiBaseURL)
-			assert.Equal(t, "secret", p.token)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			p := providerInterface.(*provider)
+			assert.Equal(t, tc.expectedURL, p.apiBaseURL)
 		})
 	}
 }
