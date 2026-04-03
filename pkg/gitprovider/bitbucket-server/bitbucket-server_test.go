@@ -90,7 +90,7 @@ func TestNewProvider(t *testing.T) {
 			assert.NoError(t, err)
 			p, ok := providerInterface.(*provider)
 			if !ok {
-					t.Fatalf("NewProvider did not return a *provider for case: %s", tc.name)
+				t.Fatalf("NewProvider did not return a *provider for case: %s", tc.name)
 			}
 			assert.Equal(t, tc.expectedURL, p.apiBaseURL)
 		})

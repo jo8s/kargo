@@ -95,8 +95,8 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 
 	// 1. Check for the 'scm' prefix used by many Bitbucket Server installs
 	if parts[0] == "scm" && len(parts) >= 3 {
-			project = parts[1]
-			repoSlug = parts[2]
+		project = parts[1]
+		repoSlug = parts[2]
 	} else if parts[0] == "projects" && len(parts) >= 4 {
 			// 2. Handle the standard /projects/PROJ/repos/REPO format
 			project = parts[1]
