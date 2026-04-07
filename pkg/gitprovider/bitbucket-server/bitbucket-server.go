@@ -112,19 +112,19 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 	// 4. Determine if this is a User space or a Project space
 	projectType = "projects"
 	if strings.HasPrefix(project, "~") {
-			projectType = "users"
+		projectType = "users"
 	}
 
   // 5. Build the API Base URL correctly
 	// Bitbucket Server API: /rest/api/1.0/projects/PROJ/repos/REPO
 	// OR /rest/api/1.0/users/~USER/repos/REPO
 	apiBaseURL := fmt.Sprintf("%s://%s/rest/api/1.0/%s/%s/repos/%s",
-			u.Scheme, u.Host, projectType, project, repoSlug)
+		u.Scheme, u.Host, projectType, project, repoSlug)
 
 	return &provider{
-			apiBaseURL: apiBaseURL,
-			token:      opts.Token,
-			httpClient: cleanhttp.DefaultClient(),
+		apiBaseURL: apiBaseURL,
+		token:      opts.Token,
+		httpClient: cleanhttp.DefaultClient(),
 	}, nil
 }
 
