@@ -282,7 +282,8 @@ func (p *provider) doRequest(ctx context.Context, method, apiURL string, body an
 
 	req.Header.Set("Content-Type", "application/json")
 	if p.token != "" {
-		req.Header.Set("Authorization", "Bearer "+p.token)
+		cleanToken := strings.TrimSpace(p.token)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cleanToken))
 	}
 
 	// #nosec G704
