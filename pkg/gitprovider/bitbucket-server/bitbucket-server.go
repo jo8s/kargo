@@ -98,15 +98,15 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 		project = parts[1]
 		repoSlug = parts[2]
 	} else if parts[0] == "projects" && len(parts) >= 4 {
-			// 2. Handle the standard /projects/PROJ/repos/REPO format
-			project = parts[1]
-			repoSlug = parts[3]
+		// 2. Handle the standard /projects/PROJ/repos/REPO format
+		project = parts[1]
+		repoSlug = parts[3]
 	} else if len(parts) >= 2 {
-			// 3. Fallback for direct /PROJ/REPO or /~USER/REPO
-			project = parts[0]
-			repoSlug = parts[1]
+		// 3. Fallback for direct /PROJ/REPO or /~USER/REPO
+		project = parts[0]
+		repoSlug = parts[1]
 	} else {
-			return nil, fmt.Errorf("could not determine project and repo from path: %s", u.Path)
+		return nil, fmt.Errorf("could not determine project and repo from path: %s", u.Path)
 	}
 
 	// 4. Determine if this is a User space or a Project space
