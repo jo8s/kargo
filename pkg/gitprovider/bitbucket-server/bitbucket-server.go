@@ -115,7 +115,7 @@ func NewProvider(repoURL string, opts *gitprovider.Options) (gitprovider.Interfa
 		projectType = "users"
 	}
 
-  // 5. Build the API Base URL correctly
+	// 5. Build the API Base URL correctly
 	// Bitbucket Server API: /rest/api/1.0/projects/PROJ/repos/REPO
 	// OR /rest/api/1.0/users/~USER/repos/REPO
 	apiBaseURL := fmt.Sprintf("%s://%s/rest/api/1.0/%s/%s/repos/%s",
