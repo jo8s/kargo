@@ -34,7 +34,7 @@ var registration = gitprovider.Registration{
 		}
 		host := strings.ToLower(u.Hostname())
 		// Match internal bitbucket hosts, excluding the public bitbucket.org
-		return strings.HasPrefix(host, "bitbucket.") || strings.Contains(host, ".bitbucket.")
+		return strings.Contains(host, "bitbucket") && host != "bitbucket.org"
 	},
 	NewProvider: func(
 		repoURL string,
