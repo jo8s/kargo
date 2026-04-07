@@ -390,14 +390,21 @@ func TestGetCommitURL(t *testing.T) {
 }
 
 func TestDoRequest(t *testing.T) {
+	// Simulate a token that came from a messy Secret (with newline and tab)
+	// Your code should strip the \n and \t to make it valid for the header.
+	dirtyToken := "secret-token\n\t"
+	expectedHeader := "Bearer secret-token"
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check headers
-		assert.Equal(t, "Bearer secret-token", r.Header.Get("Authorization"))
+		// Verify headers - if sanitization fails, this check fails
+		// or the server crashes with "invalid header field value"
+		assert.Equal(t, expectedHeader, r.Header.Get("Authorization"))
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 		// Check body was sent correctly
 		var body map[string]string
-		_ = json.NewDecoder(r.Body).Decode(&body)
+		err := json.NewDecoder(r.Body).Decode(&body)
+		assert.NoError(t, err)
 		assert.Equal(t, "bar", body["foo"])
 
 		w.WriteHeader(http.StatusOK)
@@ -406,11 +413,18 @@ func TestDoRequest(t *testing.T) {
 	defer server.Close()
 
 	p := &provider{
-		token:      "secret-token",
-		httpClient: http.DefaultClient,
+		token:      dirtyToken,
+		httpClient: server.Client(),
 	}
 
-	resp, err := p.doRequest(context.Background(), http.MethodPost, server.URL, map[string]string{"foo": "bar"})
+	// Execute doRequest
+	resp, err := p.doRequest(
+		context.Background(),
+		http.MethodPost,
+		server.URL,
+		map[string]string{"foo": "bar"},
+	)
+
 	require.NoError(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

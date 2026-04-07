@@ -282,7 +282,15 @@ func (p *provider) doRequest(ctx context.Context, method, apiURL string, body an
 
 	req.Header.Set("Content-Type", "application/json")
 	if p.token != "" {
-		cleanToken := strings.TrimSpace(p.token)
+		cleanToken := strings.Map(func(r rune) rune {
+			if r >= 32 && r <= 126 {
+				return r
+			}
+			return -1
+		}, p.token)
+
+		cleanToken = strings.TrimSpace(cleanToken)
+
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cleanToken))
 	}
 
