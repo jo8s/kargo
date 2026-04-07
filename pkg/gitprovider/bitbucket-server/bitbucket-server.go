@@ -34,7 +34,7 @@ var registration = gitprovider.Registration{
 		}
 		host := strings.ToLower(u.Hostname())
 		// Match internal bitbucket hosts, excluding the public bitbucket.org
-		return strings.Contains(host, "bitbucket") && host != "bitbucket.org"
+		return strings.HasPrefix(host, "bitbucket.") || strings.Contains(host, ".bitbucket.")
 	},
 	NewProvider: func(
 		repoURL string,
@@ -280,18 +280,18 @@ func (p *provider) doRequest(ctx context.Context, method, apiURL string, body an
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	req.Header.Set("Accept", "application/json")
+
 	if p.token != "" {
-		cleanToken := strings.Map(func(r rune) rune {
-			if r >= 32 && r <= 126 {
-				return r
-			}
-			return -1
-		}, p.token)
+		cleanToken := strings.TrimSpace(p.token)
+		cleanToken = strings.ReplaceAll(cleanToken, "\n", "")
+		cleanToken = strings.ReplaceAll(cleanToken, "\r", "")
 
-		cleanToken = strings.TrimSpace(cleanToken)
-
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", cleanToken))
+		req.Header.Set("Authorization", "Bearer "+cleanToken)
 	}
 
 	// #nosec G704
